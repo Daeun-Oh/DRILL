@@ -8,14 +8,16 @@ Do activity: 특정 상태에 머무르는 동안 수행하는 일(반복될 수
 from pico2d import *
 
 # Boy Event
-RIGHT_DOWN, LEFT_DOWN, RIGHT_UP, LEFT_UP, SLEEP_TIMER = range(5) # 0부터 3까지의 정수값이 차례로 할당됨.
+RIGHT_DOWN, LEFT_DOWN, RIGHT_UP, LEFT_UP, SLEEP_TIMER, RIGHT_SHIFT, LEFT_SHIFT, DASH_TIMER = range(8) # 0부터 3까지의 정수값이 차례로 할당됨.
 
 key_event_table = {
     # Key는 (정수, 정수) tuple   # Value는 정수
     (SDL_KEYDOWN, SDLK_RIGHT): RIGHT_DOWN,
     (SDL_KEYDOWN, SDLK_LEFT): LEFT_DOWN,
     (SDL_KEYUP, SDLK_RIGHT): RIGHT_UP,
-    (SDL_KEYUP, SDLK_LEFT): LEFT_UP
+    (SDL_KEYUP, SDLK_LEFT): LEFT_UP,
+    (SDL_KEYDOWN, SDLK_RSHIFT): RIGHT_SHIFT,
+    (SDL_KEYDOWN, SDLK_LSHIFT): LEFT_SHIFT
     # 입력 키값 해석을 단순화시키고, 키입력을 단일이벤트로 만들기 위한 매핑
     # 오른쪽 키가 눌렸다 / 왼쪽 키가 눌렸다 / 오른쪽 키가 떼어졌다 / 왼쪽 키가 떼어졌다
 }
@@ -95,11 +97,34 @@ class SleepState:
         else:
             boy.image.clip_composite_draw(boy.frame * 100, 200, 100, 100, -3.141592 / 2, '', boy.x + 25, boy.y - 25, 100, 100)
 
+class DashState:
+    def enter(boy, event):
+        if event == RIGHT_SHIFT or LEFT_SHIFT:
+            boy.timer = 150
+
+    def exit(boy, event):
+        pass
+
+    def do(boy):
+        boy.frame = (boy.frame + 1) % 8
+        boy.timer -= 1
+        boy.x += boy.velocity * 2
+        boy.x = clamp(25, boy.x, 800 - 25)
+        if boy.timer == 0:
+            boy.add_event(DASH_TIMER)
+
+    def draw(boy):
+        if boy.velocity == 1:
+            boy.image.clip_draw(boy.frame * 100, 100, 100, 100, boy.x, boy.y)
+        else:
+            boy.image.clip_draw(boy.frame * 100, 0, 100, 100, boy.x, boy.y)
+
 next_state_table = {
     # 모든 경우를 생각. ex) 깨어있는데 때리면?, 자고있는데 10초가 지나면?
-    IdleState: {RIGHT_UP: RunState, LEFT_UP: RunState, RIGHT_DOWN: RunState, LEFT_DOWN: RunState, SLEEP_TIMER: SleepState},
-    RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState, LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState},
-    SleepState: {LEFT_DOWN: RunState, RIGHT_DOWN: RunState, LEFT_UP: RunState, RIGHT_UP: RunState}
+    IdleState: {RIGHT_UP: RunState, LEFT_UP: RunState, RIGHT_DOWN: RunState, LEFT_DOWN: RunState, SLEEP_TIMER: SleepState, LEFT_SHIFT: IdleState, RIGHT_SHIFT: IdleState},
+    RunState: {RIGHT_UP: IdleState, LEFT_UP: IdleState, LEFT_DOWN: IdleState, RIGHT_DOWN: IdleState, LEFT_SHIFT: DashState, RIGHT_SHIFT: DashState},
+    SleepState: {LEFT_DOWN: RunState, RIGHT_DOWN: RunState, LEFT_UP: RunState, RIGHT_UP: RunState, LEFT_SHIFT: SleepState, RIGHT_SHIFT: SleepState},
+    DashState: {RIGHT_UP: IdleState, LEFT_UP: IdleState, DASH_TIMER: RunState}
 }
 
 class Boy:
