@@ -8,7 +8,7 @@ import game_world
 
 from boy import Boy
 from grass import Grass
-from ball import Ball
+from ball import Ball, BigBall
 from bird import Bird
 
 name = "MainState"
@@ -21,7 +21,14 @@ bird = None
 
 
 def collide(a, b):
-    # fill here
+    left_a, bottom_a, right_a, top_a = a.get_bb()
+    left_b, bottom_b, right_b, top_b = b.get_bb()
+
+    if left_a > right_b: return False
+    if right_a < left_b: return False
+    if top_a < bottom_b: return False
+    if bottom_a > top_b: return False
+
     return True
 
 
@@ -36,21 +43,25 @@ def enter():
     grass = Grass()
     game_world.add_object(grass, 0)
 
-    global bird
-    bird = Bird()
-    game_world.add_object(bird, 0)
+    global balls
+    balls = [Ball() for i in range(10)] + [BigBall() for i in range(10)]
+    game_world.add_objects(balls, 1)
 
-    bird = Bird()
-    game_world.add_object(bird, 0)
+    # global bird
+    # bird = Bird()
+    # game_world.add_object(bird, 0)
 
-    bird = Bird()
-    game_world.add_object(bird, 0)
+    # bird = Bird()
+    # game_world.add_object(bird, 0)
 
-    bird = Bird()
-    game_world.add_object(bird, 0)
+    # bird = Bird()
+    # game_world.add_object(bird, 0)
 
-    bird = Bird()
-    game_world.add_object(bird, 0)
+    # bird = Bird()
+    # game_world.add_object(bird, 0)
+
+    # bird = Bird()
+    # game_world.add_object(bird, 0)
 
     # fill here for balls
 
@@ -85,7 +96,18 @@ def update():
         game_object.update()
 
     # fill here for collision check
+    for ball in balls:
+        if collide(boy, ball):
+            if collide(boy, ball):
+                # print("COLLISION")
+                balls.remove(ball)  # 충돌을 검사해야 할 공 리스트(balls)에서 제거
+                game_world.remove_object(ball)  # 게임 월드 내에서 제거
 
+    for ball in balls:
+        if collide(grass, ball):
+            ball.stop()
+
+    # delay(0.9)
 
 
 def draw():
