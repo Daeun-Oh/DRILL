@@ -135,6 +135,8 @@ class Boy:
         self.cur_state = IdleState
         self.cur_state.enter(self, None)
 
+        self.parent = None  # 발판에 속해있지 않다.
+
     def get_bb(self):
         # fill here
         return self.x - 30, self.y - 30, self.x + 30, self.y + 50
@@ -157,6 +159,11 @@ class Boy:
             self.cur_state = next_state_table[self.cur_state][event]
             self.cur_state.enter(self, event)
 
+        if self.parent: # 소년이 발판에 붙어 있으면,
+            self.x += self.parent.speed * game_framework.frame_time
+            # 부모의 스피드 만큼 소년에 추가
+            self.x = clamp(self.parent.x - 80, self.x, self.parent.x + 80)
+
 
     def draw(self):
         self.cur_state.draw(self)
@@ -168,4 +175,8 @@ class Boy:
         if (event.type, event.key) in key_event_table:
             key_event = key_event_table[(event.type, event.key)]
             self.add_event(key_event)
+
+    def set_parent(self, brick):
+        self.parent = brick
+        self.x, self.y = brick.x + brick.BOY_X0, brick.y + brick.BOY_Y0
 

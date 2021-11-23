@@ -5,8 +5,13 @@ from pico2d import *
 import game_framework
 import game_world
 
+import server
+import collision
+
 
 class Brick:
+
+    BOY_X0, BOY_Y0 = -50, 60
 
     def __init__(self, center=300, y=100):
         self.image = load_image('brick180x40.png')
@@ -22,6 +27,13 @@ class Brick:
         if self.x <= self.left_wall:
             self.speed = random.randint(100,250) * random.choice([-1,1])
             self.x = self.left_wall
+
+
+        # 발판과 소년이 충돌하는지 체크한다.
+        if collision.collide(self, server.boy):
+            server.boy.set_parent(self)     # 발판을 보이의 부모로 만든다
+
+
 
     def draw(self):
         self.image.draw(self.x, self.y)
