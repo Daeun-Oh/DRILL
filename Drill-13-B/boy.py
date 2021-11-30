@@ -162,7 +162,11 @@ class Boy:
         if self.parent: # 소년이 발판에 붙어 있으면,
             self.x += self.parent.speed * game_framework.frame_time
             # 부모의 스피드 만큼 소년에 추가
-            self.x = clamp(self.parent.x - 80, self.x, self.parent.x + 80)
+            # self.x = clamp(self.parent.x - 80, self.x, self.parent.x + 80)
+            if self.x <= self.parent.x - 80 or self.x >= self.parent.x + 80:
+                self.y = 90
+                self.parent = None
+
 
 
     def draw(self):
